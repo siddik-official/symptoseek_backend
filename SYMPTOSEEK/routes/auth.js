@@ -24,6 +24,8 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+
+
 module.exports = router;
 
 
@@ -53,4 +55,25 @@ router.post("/login", async (req, res) => {
 router.get("/profile", authMiddleware, async (req, res) => {
   const user = await User.findById(req.user.userId).select("-password");
   res.json(user);
+});
+
+router.put("/profile/edit", authMiddleware, async (req, res) => {
+  try {
+    const { name, bio, gender, age, phone, address } = req.body; // Add new fields
+
+    // Find and update the user
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.userId,
+      { name, email, bio, gender, age, phone, address },
+      { new: true, runValidators: true }
+    ).select("-password"); // Exclude password from response
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 });
