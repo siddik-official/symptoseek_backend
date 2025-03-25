@@ -59,12 +59,14 @@ router.get("/profile", authMiddleware, async (req, res) => {
 
 router.put("/profile/edit", authMiddleware, async (req, res) => {
   try {
-    const { name, bio, gender, age, phone, address } = req.body; // Add new fields
+    const { name, bio, gender, age, phone, address, zip_code, country, state, city, profile_pic } = req.body;
 
     // Find and update the user
+
+    
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
-      { name, email, bio, gender, age, phone, address },
+      { name, bio, gender, age, phone, address, zip_code, country, state, city, profile_pic },
       { new: true, runValidators: true }
     ).select("-password"); // Exclude password from response
 
