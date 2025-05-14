@@ -9,7 +9,10 @@ const doctorSchema = new mongoose.Schema({
     visitng_hours: { type: String, required: true },
     degree: { type: String, required: true },
     hospital_name: { type: String, required: true },
-    about: { type: String, required: true }
+    about: { type: String, required: true },
+    longitude: { type: String, required: true },
+    latitude: { type: String, required: true },
+    
 });
 
 // Make sure this line exists:

@@ -76,7 +76,16 @@ router.put("/profile/edit", authMiddleware, async (req, res) => {
       country, 
       state, 
       city, 
-      profile_pic 
+      profile_pic,
+      blood_group,
+      weight,
+      height,
+      allergies,
+      medical_conditions,
+      medications,
+      surgeries,
+      family_medical_history,
+      emergency_contact 
     } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -92,7 +101,16 @@ router.put("/profile/edit", authMiddleware, async (req, res) => {
         country, 
         state, 
         city, 
-        profile_pic 
+        profile_pic,
+        blood_group,
+        weight,
+        height,
+        allergies,
+        medical_conditions,
+        medications,
+        surgeries,
+        family_medical_history,
+        emergency_contact  
       },
       { new: true, runValidators: true }
     ).select("-password");
