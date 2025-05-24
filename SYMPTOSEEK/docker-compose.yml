@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Node.js Backend
+  api:
+    build: ./api
+    container_name: symptoseek-api
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb+srv://officialsiddik:sidbro123@project.nzfx0.mongodb.net/symptoseek?retryWrites=true&w=majority
+      - NODE_ENV=${NODE_ENV}
+      - JWT_SECRET=your_jwt_secret
+      - CLOUDINARY_CLOUD_NAME=symptoseek_user_photo
+      - CLOUDINARY_API_KEY=666225238245515
+      - CLOUDINARY_API_SECRET=aGhF2ceR0uAYrIHkk-ctUI7rTe4
+      - PYTHON_ML_URL=http://ml-service:5001
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    depends_on:
+      - ml-service
+    restart: unless-stopped
+    networks:
+      - symptoseek-net
+
+  # Python ML Service
+  ml-service:
+    build: ./ml-service
+    container_name: symptoseek-ml
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./ml-service:/app
+      - ml-models:/app/models  # Persistent volume for ML models
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - symptoseek-net
+
+# Since you're using MongoDB Atlas, we don't need a local MongoDB container
+networks:
+  symptoseek-net:
+    driver: bridge
+
+volumes:
+  ml-models:  # Dedicated volume for ML model files
