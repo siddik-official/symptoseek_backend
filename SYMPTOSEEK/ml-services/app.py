@@ -4,8 +4,6 @@ import pandas as pd
 from flask import Flask, request, jsonify
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
 
 app = Flask(__name__)
 
@@ -15,7 +13,7 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 def load_and_preprocess_data():
     """Load and preprocess the symptoms dataset"""
-    data_path = os.path.join("data", "Fydp_Works2.csv")
+    data_path = os.path.join(os.path.dirname(__file__), "Fydp_Works2.csv")
     df = pd.read_csv(data_path)
     
     diseases = []
@@ -45,20 +43,9 @@ def train_model():
     X = mlb.fit_transform([d["symptoms"] for d in diseases])
     y = [d["disease"] for d in diseases]
     
-    # Split data
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-    
     # Train model
     model = RandomForestClassifier(n_estimators=200, random_state=42)
-    model.fit(X_train, y_train)
-    
-    # Evaluate
-    y_pred = model.predict(X_test)
-    print("Model Accuracy:", accuracy_score(y_test, y_pred))
-    print("\nClassification Report:")
-    print(classification_report(y_test, y_pred))
+    model.fit(X, y)
     
     # Save artifacts
     joblib.dump(model, os.path.join(MODEL_DIR, "symptom_classifier.pkl"))
@@ -84,18 +71,22 @@ def predict():
         return jsonify({"error": "No symptoms provided"}), 400
     
     try:
-        features = mlb.transform([symptoms])
+        # Preprocess symptoms
+        processed_symptoms = [s.lower().strip() for s in symptoms]
+        
+        # Transform to ML features
+        features = mlb.transform([processed_symptoms])
+        
+        # Get predictions
         proba = model.predict_proba(features)[0]
         best_idx = proba.argmax()
         
         return jsonify({
             "predicted_disease": model.classes_[best_idx],
             "confidence": float(proba[best_idx]),
-            "related_symptoms": symptoms,
-            "all_probabilities": {
-                disease: float(prob) 
-                for disease, prob in zip(model.classes_, proba)
-            }
+            "category": diseases[best_idx]["category"],
+            "suggested_doctors": [],  # Will be filled by Node.js
+            "related_symptoms": diseases[best_idx]["symptoms"]
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

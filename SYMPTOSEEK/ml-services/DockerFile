@@ -1,23 +1,23 @@
 # Use official Python image
-FROM python:3.9-slim
+# FROM python:3.9-slim
 
-# Set working directory
-WORKDIR /app
+# # Set working directory
+# WORKDIR /app
 
-# Copy requirements first for caching
-COPY requirements.txt .
+# # Copy requirements first for caching
+# COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# # Install dependencies
+# RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all files
-COPY . .
+# # Copy all files
+# COPY . .
 
-# Make sure Python can find the CSV
-ENV PYTHONPATH=/app
+# # Make sure Python can find the CSV
+# ENV PYTHONPATH=/app
 
-# Expose port
-EXPOSE 5001
+# # Expose port
+# EXPOSE 5001
 
-# Start command
-CMD ["python", "app.py"]
+# # Start command
+# CMD ["python", "app.py"]
