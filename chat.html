@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYMPTOSEEK - Your AI Health Assistant</title>
+    <!-- Leaflet CSS for map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhpmDpgdHeflonTRAVOPHJZVVPJsrPo1iEjw="
+     crossorigin=""/>
+    <!-- Leaflet JavaScript for map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .auth-container, .chat-wrapper { width: 100%; max-width: 400px; background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; padding: 25px; margin-bottom:20px; }
+        .chat-wrapper { max-width: 700px; /* Chat can be wider */ }
+        
+        /* Auth Styles */
+        .auth-container h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .auth-container input[type="text"], .auth-container input[type="password"], .auth-container input[type="email"] { width: calc(100% - 22px); padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+        .auth-container button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; transition: background-color 0.2s; }
+        .auth-container button:hover { background-color: #55e9dc; }
+        .auth-toggle { text-align: center; margin-top:15px; font-size: 0.9em; }
+        .auth-toggle button { background: none; border: none; color: #31ade7; cursor: pointer; text-decoration: underline; padding: 0; font-size: 1em; }
+        #auth-error, #chat-error-msg { color: #dc3545; text-align: center; margin-bottom: 10px; font-size: 0.9em; min-height:1.2em; }
+
+        /* Chat Styles */
+        .chat-container { display: flex; flex-direction: column; height: calc(90vh - 60px); max-height: 700px; width:100%; }
+        .chat-header { background-color: #007bff; color: white; padding: 12px 15px; text-align: center; font-size: 1.1em; border-top-left-radius: 8px; border-top-right-radius: 8px; display: flex; justify-content: space-between; align-items: center;}
+        .chat-header #logout-button { background: #6c757d; border:none; color:white; padding: 6px 12px; border-radius:4px; cursor:pointer; font-size:0.8em; }
+        .chat-header #logout-button:hover { background: #5a6268; }
+        .chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; border-left: 1px solid #eee; border-right: 1px solid #eee; background-color: #fff;}
+        .message { margin-bottom: 12px; display: flex; }
+        .message.user { justify-content: flex-end; }
+        .message .text { padding: 10px 14px; border-radius: 18px; max-width: 75%; word-wrap: break-word; line-height: 1.4; font-size: 0.95em;}
+        .message.bot .text { background-color: #e9ecef; color: #212529; border-top-left-radius: 0; }
+        .message.user .text { background-color: #007bff; color: white; border-top-right-radius: 0; }
+        .chat-input-area { display: flex; padding: 10px; border: 1px solid #eee; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; background-color: #f8f9fa; align-items: center;}
+        .chat-input-area input { flex-grow: 1; padding: 10px 12px; border: 1px solid #ccc; border-radius: 20px; margin-right: 10px; outline: none; font-size: 0.95em;}
+        .chat-input-area button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 0.95em; transition: background-color 0.2s;}
+        .chat-input-area button:hover { background-color: #0056b3; }
+        #map { height: 0px; width: calc(100% - 2px); /* -2px for border */ margin-top: 10px; transition: height 0.4s ease-in-out; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;}
+        .doctor-card { border:1px solid #e0e0e0; padding:10px; margin-bottom:10px; border-radius:5px; overflow:hidden; font-size: 0.9em; background-color: #f9f9f9;}
+        .doctor-card img { width:50px; height:50px; border-radius:50%; float:left; margin-right:10px; object-fit:cover; border: 1px solid #ddd;}
+        .doctor-card strong {color: #65ddab;}
+        .typing-indicator { font-style: italic; color: #6c757d; padding: 5px 15px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="auth-container" id="auth-section">
+        <h2 id="auth-title">Login</h2>
+        <div id="auth-error"></div>
+        <input type="email" id="email-field" placeholder="Email" autocomplete="email">
+        <input type="password" id="password-field" placeholder="Password" autocomplete="current-password">
+        <button id="auth-button">Login</button>
+        <div class="auth-toggle">
+            <span id="toggle-text">Don't have an account? </span>
+            <button id="toggle-auth-mode">Register</button>
+        </div>
+    </div>
+
+    <div class="chat-wrapper" id="chat-section-wrapper" style="display:none;">
+        <div class="chat-container">
+            <div class="chat-header">
+                <span>ArogyaBot</span>
+                <div>
+                    <span id="loggedInUserDisplay" style="font-size:0.8em; margin-right:10px;"></span>
+                    <button id="logout-button">Logout</button>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages will appear here -->
+            </div>
+            <div id="typing-indicator" class="typing-indicator" style="display: none;">Bot is typing...</div>
+            <div id="chat-error-msg"></div>
+            <div id="map"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input-field" placeholder="Type your symptoms or 'reset'...">
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInputField = document.getElementById('user-input-field');
+        const sendButton = document.getElementById('send-button');
+        const mapElement = document.getElementById('map');
+        const typingIndicator = document.getElementById('typing-indicator');
+        let mapInstance = null; 
+        let doctorMarkers = [];
+
+        const authSection = document.getElementById('auth-section');
+        const chatSectionWrapper = document.getElementById('chat-section-wrapper');
+        const emailField = document.getElementById('email-field');
+        const passwordField = document.getElementById('password-field');
+        const authButton = document.getElementById('auth-button');
+        const authTitle = document.getElementById('auth-title');
+        const toggleAuthModeButton = document.getElementById('toggle-auth-mode');
+        const toggleAuthText = document.getElementById('toggle-text');
+        const logoutButton = document.getElementById('logout-button');
+        const loggedInUserDisplay = document.getElementById('loggedInUserDisplay');
+        const authErrorDiv = document.getElementById('auth-error');
+        const chatErrorMsgDiv = document.getElementById('chat-error-msg');
+
+        let isRegisterMode = false;
+        // Make sure this matches your Node.js server's port and base API path
+        const NODE_API_BASE_URL = 'http://localhost:5000/api'; 
+
+        function displayAuthError(message) {
+            authErrorDiv.textContent = message;
+            authErrorDiv.style.display = message ? 'block' : 'none';
+        }
+        function displayChatError(message) {
+            chatErrorMsgDiv.textContent = message;
+            chatErrorMsgDiv.style.display = message ? 'block' : 'none';
+            if (message) setTimeout(() => { chatErrorMsgDiv.style.display = 'none'; }, 7000);
+        }
+
+        toggleAuthModeButton.addEventListener('click', () => {
+            isRegisterMode = !isRegisterMode;
+            authTitle.textContent = isRegisterMode ? 'Register' : 'Login';
+            authButton.textContent = isRegisterMode ? 'Register' : 'Login';
+            toggleAuthText.textContent = isRegisterMode ? 'Already have an account? ' : "Don't have an account? ";
+            toggleAuthModeButton.textContent = isRegisterMode ? 'Login' : 'Register';
+            emailField.value = '';
+            passwordField.value = '';
+            displayAuthError('');
+        });
+
+        authButton.addEventListener('click', async () => {
+            const email = emailField.value.trim();
+            const password = passwordField.value.trim();
+            displayAuthError('');
+
+            if (!email || !password) {
+                displayAuthError('Email and password are required.');
+                return;
+            }
+            if (!/^\S+@\S+\.\S+$/.test(email)) {
+                displayAuthError('Please enter a valid email address.');
+                return;
+            }
+
+            // *** Check this endpoint carefully ***
+            const endpoint = isRegisterMode ? `${NODE_API_BASE_URL}/auth/signup` : `${NODE_API_BASE_URL}/auth/login`; // Changed 'singup' to 'signup'
+            
+            const payload = { email, password };
+            // If your backend registration needs a 'username' (even if it's the email), add it here:
+            // if (isRegisterMode) { payload.username = email; }
+            
+            authButton.disabled = true;
+            authButton.textContent = isRegisterMode ? 'Registering...' : 'Logging in...';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    displayAuthError(data.message || `Error: ${response.status}`);
+                    return;
+                }
+
+                if (isRegisterMode) {
+                    alert('Registration successful! Please login.');
+                    toggleAuthModeButton.click(); 
+                } else { 
+                    if (data.token || data.accessToken) {
+                        localStorage.setItem('accessToken', data.token || data.accessToken);
+                        localStorage.setItem('userDisplayIdentifier', data.user?.email || data.email || email); 
+                        showChatSection();
+                        addMessage("Welcome " + (data.user?.email || data.email || email) + "! I'm ArogyaBot. How can I help you today?", 'bot');
+                    } else {
+                        displayAuthError('Login successful, but no token received from server.');
+                    }
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                displayAuthError('An error occurred during authentication. Please check console.');
+            } finally {
+                 authButton.disabled = false;
+                 authButton.textContent = isRegisterMode ? 'Register' : 'Login';
+            }
+        });
+
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('userDisplayIdentifier');
+            showAuthSection();
+            chatMessages.innerHTML = ''; 
+            hideMap(); 
+        });
+
+        function showAuthSection() {
+            authSection.style.display = 'block';
+            chatSectionWrapper.style.display = 'none';
+            loggedInUserDisplay.textContent = '';
+        }
+
+        function showChatSection() {
+            authSection.style.display = 'none';
+            chatSectionWrapper.style.display = 'block'; 
+            const userIdentifier = localStorage.getItem('userDisplayIdentifier');
+            if (userIdentifier) {
+                loggedInUserDisplay.textContent = `(Logged in: ${userIdentifier})`;
+            }
+        }
+        
+        function checkLoginStatus() {
+            const token = localStorage.getItem('accessToken');
+            const userIdentifier = localStorage.getItem('userDisplayIdentifier');
+            if (token && userIdentifier) {
+                showChatSection();
+                addMessage(`Welcome back, ${userIdentifier}! How can I assist you today?`, 'bot');
+            } else {
+                showAuthSection();
+            }
+        }
+
+        function addMessage(text, sender, isHtml = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+            const textDiv = document.createElement('div');
+            textDiv.classList.add('text');
+            if (isHtml) {
+                textDiv.innerHTML = text; 
+            } else {
+                textDiv.textContent = text;
+            }
+            messageDiv.appendChild(textDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessageToServer() {
+            const messageText = userInputField.value.trim();
+            if (!messageText) return;
+
+            addMessage(messageText, 'user');
+            userInputField.value = '';
+            displayChatError(''); 
+            typingIndicator.style.display = 'block';
+            sendButton.disabled = true;
+
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                addMessage('Authentication error. Please login again.', 'bot');
+                typingIndicator.style.display = 'none';
+                sendButton.disabled = false;
+                showAuthSection(); 
+                return;
+            }
+
+            try {
+                // Ensure this points to your Node.js chat endpoint
+                const response = await fetch(`${NODE_API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ message: messageText })
+                });
+
+                typingIndicator.style.display = 'none';
+                sendButton.disabled = false;
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: "Unknown server error."}));
+                    let errMsg = `Error ${response.status}: ${errorData.message || 'Failed to get response from server.'}`;
+                    if (errorData.flask_response && errorData.flask_response.bot_response_parts) {
+                         errMsg += ` Details: ${errorData.flask_response.bot_response_parts.join(' ')}`;
+                    } else if (errorData.details && errorData.details.bot_response_parts) { // For older error structure
+                         errMsg += ` Details: ${errorData.details.bot_response_parts.join(' ')}`;
+                    }
+                    addMessage(errMsg, 'bot');
+                    displayChatError(errMsg); 
+                    if (response.status === 401 || response.status === 403) { 
+                        localStorage.removeItem('accessToken');
+                        localStorage.removeItem('userDisplayIdentifier');
+                        showAuthSection();
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success && data.bot_response_parts) {
+                    data.bot_response_parts.forEach(part => {
+                        const isHtmlContent = /<\w+.*>/.test(part);
+                        addMessage(part, 'bot', isHtmlContent);
+                    });
+
+                    if (data.map_data && data.map_data.doctors && data.map_data.doctors.length > 0) {
+                        console.log("Received map_data, calling displayMapWithDoctors:", data.map_data.doctors);
+                        displayMapWithDoctors(data.map_data.doctors);
+                    } else {
+                        console.log("No map_data or no doctors in map_data, calling hideMap.");
+                        hideMap(); 
+                    }
+                } else if (data.bot_response_parts) { // Handle if 'success' field is missing but parts are there
+                    console.warn("Response 'success' field missing, but bot_response_parts found.");
+                     data.bot_response_parts.forEach(part => {
+                        const isHtmlContent = /<\w+.*>/.test(part);
+                        addMessage(part, 'bot', isHtmlContent);
+                    });
+                     if (data.map_data && data.map_data.doctors && data.map_data.doctors.length > 0) {
+                        displayMapWithDoctors(data.map_data.doctors);
+                    } else {
+                        hideMap(); 
+                    }
+                }
+                else {
+                    addMessage(data.message || "Received an unexpected response structure from the server.", 'bot');
+                }
+
+            } catch (error) {
+                console.error('Send message error:', error);
+                typingIndicator.style.display = 'none';
+                sendButton.disabled = false;
+                addMessage('Sorry, a network error occurred. Please check your connection and try again.', 'bot');
+                displayChatError('Network error or server is down. Please check console.');
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessageToServer);
+        userInputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendButton.disabled) {
+                sendMessageToServer();
+            }
+        });
+
+        function initializeMap() {
+            if (!mapInstance && mapElement) { 
+                try {
+                    mapInstance = L.map(mapElement).setView([23.8103, 90.4125], 7); // Default: Bangladesh
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                        maxZoom: 18,
+                    }).addTo(mapInstance);
+                    console.log("Map initialized.");
+                } catch(e) {
+                    console.error("Error initializing map:", e);
+                    if (mapElement) mapElement.innerHTML = "<p style='text-align:center; color:red;'>Could not load map.</p>";
+                }
+            }
+        }
+
+        function displayMapWithDoctors(doctors) {
+            if (!mapElement) {
+                console.warn("Map element not found, cannot display doctors.");
+                return;
+            }
+            
+            mapElement.style.height = '300px'; 
+            console.log("Map container height set to 300px");
+            initializeMap(); 
+            
+            if (!mapInstance) {
+                console.warn("Map instance not available, cannot display doctors.");
+                hideMap();
+                return;
+            }
+
+            doctorMarkers.forEach(marker => mapInstance.removeLayer(marker));
+            doctorMarkers = [];
+            console.log("Cleared old doctor markers.");
+
+            if (!doctors || doctors.length === 0) {
+                 console.warn("No doctors data provided to displayMapWithDoctors.");
+                 hideMap(); 
+                 return;
+            }
+
+            const validDoctors = doctors.filter(doc => {
+                const lat = parseFloat(doc.lat);
+                const lng = parseFloat(doc.lng);
+                return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+            });
+
+            if(validDoctors.length === 0) {
+                console.warn("No doctors with valid coordinates to display.");
+                hideMap(); 
+                return;
+            }
+            
+            const bounds = L.latLngBounds();
+
+            validDoctors.forEach(doc => {
+                const lat = parseFloat(doc.lat);
+                const lng = parseFloat(doc.lng);
+                const marker = L.marker([lat, lng]).addTo(mapInstance);
+                let popupContent = `<strong>${doc.name || 'N/A'}</strong><br>${doc.speciality || 'N/A'}`;
+                if (doc.hospital) popupContent += `<br>🏥 ${doc.hospital}`;
+                if (doc.address) popupContent += `<br>📍 ${doc.address}`;
+                if (doc.contact && String(doc.contact).toLowerCase() !== 'nan' && String(doc.contact).toLowerCase() !== 'n/a' && String(doc.contact).trim() !== '') {
+                    popupContent += `<br>📞 ${doc.contact}`;
+                }
+                marker.bindPopup(popupContent);
+                doctorMarkers.push(marker);
+                bounds.extend([lat, lng]);
+            });
+            console.log(`Added ${doctorMarkers.length} new doctor markers.`);
+            
+            setTimeout(() => {
+                if (mapInstance) {
+                    console.log("Invalidating map size and fitting bounds...");
+                    mapInstance.invalidateSize(); 
+                    if (bounds.isValid()) {
+                        mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+                    } else if (doctorMarkers.length === 1) { 
+                        mapInstance.setView(doctorMarkers[0].getLatLng(), 13);
+                    } else {
+                        mapInstance.setView([23.8103, 90.4125], 7); 
+                    }
+                    console.log("Map size invalidated and bounds fitted.");
+                }
+            }, 150); 
+        }
+
+        function hideMap() {
+            if (mapElement) {
+                mapElement.style.height = '0px';
+                console.log("Map container hidden.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLoginStatus();
+        });
+
+    </script>
+</body>
+</html>
