@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArogyaBot - Health Assistant</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; align-items: center; padding-top: 20px;}
+        .chat-container {
+            width: 90%;
+            max-width: 700px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px); /* Adjusted height */
+            min-height: 400px;
+        }
+        .chat-header { background-color: #007bff; color: white; padding: 15px; text-align: center; font-size: 1.2em; }
+        .chat-box {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .message { margin-bottom: 15px; padding: 10px; border-radius: 6px; line-height: 1.4; }
+        .user-message { background-color: #e1f5fe; text-align: right; margin-left: auto; max-width: 70%; }
+        .bot-message { background-color: #f0f0f0; text-align: left; margin-right: auto; max-width: 85%; }
+        .bot-message strong { color: #0056b3; }
+        .bot-message em { color: #555; font-style: italic; }
+        .chat-input-area { display: flex; padding: 10px; border-top: 1px solid #ddd; background-color: #fff; }
+        #userInput { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-right: 10px; }
+        #sendButton { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #sendButton:hover { background-color: #0056b3; }
+
+        /* Map container style */
+        #map-container {
+            width: 90%;
+            max-width: 700px; /* Same as chat container */
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px; /* Match container for smooth corners */
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 5px;
+        }
+        .leaflet-popup-content {
+            font-size: 0.9em;
+            line-height: 1.3;
+            min-width: 250px; /* Give popup more space */
+        }
+        .leaflet-popup-content img {
+            max-width: 50px;
+            max-height: 50px;
+            border-radius: 50%;
+            float: left;
+            margin-right: 8px;
+        }
+        .leaflet-popup-content .doctor-details {
+            margin-left: 60px; /* Space for image */
+        }
+        .leaflet-popup-content .directions-button {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background-color: #28a745; /* Green */
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .leaflet-popup-content .directions-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">ArogyaBot</div>
+        <div class="chat-box" id="chatBox">
+            <!-- Initial bot message -->
+            <div class="message bot-message">Hello! I'm ArogyaBot, your AI health assistant. To get started, please tell me your name.</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Type your message..." autofocus>
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+
+<script>
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    let userId = localStorage.getItem('arogyaBotUserId');
+    if (!userId) {
+        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        localStorage.setItem('arogyaBotUserId', userId);
+    }
+
+    let map = null; // Leaflet map instance
+    let userMarker = null;
+    let doctorMarkers = [];
+
+
+    function appendMessage(text, sender, isHtml = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+        if (isHtml) {
+            messageDiv.innerHTML = text;
+        } else {
+            messageDiv.textContent = text;
+        }
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+        const messageText = userInput.value.trim();
+        if (messageText === '') return;
+
+        appendMessage(messageText, 'user');
+        userInput.value = '';
+
+        fetch('/chat_api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: messageText, user_id: userId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            data.bot_response_parts.forEach(part => {
+                const containsHtml = /<\/?[a-z][\s\S]*>/i.test(part);
+                appendMessage(part, 'bot', containsHtml);
+            });
+            userId = data.user_id;
+            localStorage.setItem('arogyaBotUserId', userId);
+
+            if (data.map_data && data.map_data.doctors && data.map_data.doctors.length > 0) {
+                console.log("Received doctor data for map:", data.map_data.doctors);
+                document.getElementById('map-container').style.display = 'block';
+                initializeOrUpdateMap(data.map_data.doctors);
+            } else {
+                // If user says "no" to doctor search or no doctors with map data,
+                // we might want to hide the map if it was previously shown for another query.
+                // document.getElementById('map-container').style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            appendMessage('Sorry, something went wrong. Please try again.', 'bot');
+        });
+    }
+
+    function initializeOrUpdateMap(doctors) {
+        doctorMarkers.forEach(marker => marker.remove());
+        doctorMarkers = [];
+
+        if (!map) {
+            map = L.map('map');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    map.setView([userLat, userLng], 12); // Zoom level 12
+                    if (userMarker) userMarker.remove();
+                    userMarker = L.marker([userLat, userLng], {
+                        icon: L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                        })
+                    }).addTo(map).bindPopup("<b>Your Location</b>").openPopup();
+                    addDoctorMarkersToMap(doctors, map, userLat, userLng); // Pass user location
+                }, () => {
+                    console.log("Geolocation failed or denied. Centering on default.");
+                    centerMapOnDoctorsOrDefault(doctors, map);
+                    addDoctorMarkersToMap(doctors, map, null, null); // No user location
+                });
+            } else {
+                console.log("Geolocation not supported. Centering on default.");
+                centerMapOnDoctorsOrDefault(doctors, map);
+                addDoctorMarkersToMap(doctors, map, null, null); // No user location
+            }
+        } else {
+            if (userMarker) { // User location is known
+                 addDoctorMarkersToMap(doctors, map, userMarker.getLatLng().lat, userMarker.getLatLng().lng);
+            } else { // No user location known from previous attempts
+                 centerMapOnDoctorsOrDefault(doctors, map); // Recenter if map was for different doctors
+                 addDoctorMarkersToMap(doctors, map, null, null);
+            }
+        }
+    }
+    
+    function centerMapOnDoctorsOrDefault(doctors, currentMap) {
+        if (doctors.length > 0 && doctors[0].lat && doctors[0].lng) {
+            currentMap.setView([doctors[0].lat, doctors[0].lng], 11); // Zoom level 11
+        } else {
+            currentMap.setView([23.8103, 90.4125], 10); // Dhaka, Bangladesh, Zoom level 10
+        }
+    }
+
+    // Modified to accept user's current latitude and longitude
+    function addDoctorMarkersToMap(doctors, currentMap, userLat, userLng) {
+        const bounds = L.latLngBounds(); 
+
+        doctors.forEach(doc => {
+            if (doc.lat && doc.lng) { // Ensure lat and lng are present
+                const marker = L.marker([doc.lat, doc.lng]).addTo(currentMap);
+                
+                // Construct Google Maps directions URL
+                // The 'daddr' (destination address) uses lat,lng for precision.
+                // The 'saddr' (source address) can be the user's current lat,lng if available.
+                let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${doc.lat},${doc.lng}`;
+                if (userLat && userLng) {
+                    directionsUrl += `&origin=${userLat},${userLng}`;
+                } else {
+                    // If user location is not available, Google Maps will ask for starting point
+                    // Or, you could try to use the doctor's address as part of the query, but lat,lng is more robust for destination.
+                }
+                
+                // If you want to use the doctor's address for the directions query (can be less precise than lat/lng):
+                // let queryAddress = doc.address ? encodeURIComponent(doc.address) : `${doc.lat},${doc.lng}`;
+                // let directionsUrl = `https://www.google.com/maps/search/?api=1&query=${queryAddress}`;
+                // For turn-by-turn, `dir` is better:
+                // let directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${queryAddress}`;
+                // if (userLat && userLng) { // If user's location is known
+                //    directionsUrl += `&origin=${userLat},${userLng}`;
+                // }
+
+
+                let popupContent = `
+                    <img src="${doc.image || 'https://via.placeholder.com/50?text=Doc'}" alt="${doc.name}">
+                    <div class="doctor-details">
+                        <strong>${doc.name}</strong><br>
+                        <em>${doc.speciality}</em><br>
+                        ${doc.hospital || ''}<br>
+                        <small>${doc.address || ''}</small><br>
+                        ${doc.contact !== 'N/A' ? '📞 ' + doc.contact : ''}<br>
+                        <a href="${directionsUrl}" target="_blank" class="directions-button">Get Directions</a>
+                    </div>
+                    <div style="clear:both;"></div>`;
+                
+                marker.bindPopup(popupContent);
+                doctorMarkers.push(marker);
+                bounds.extend([doc.lat, doc.lng]);
+            }
+        });
+        
+        if (doctorMarkers.length > 0 && !userMarker) { 
+            currentMap.fitBounds(bounds.pad(0.1)); 
+        } else if (doctorMarkers.length > 0 && userMarker) {
+            // Optional: Extend bounds to include user and doctors, then fit
+            // const userLatLng = L.latLng(userLat, userLng);
+            // bounds.extend(userLatLng);
+            // currentMap.fitBounds(bounds.pad(0.1)); 
+            // Simpler: map is already centered on user, ensure doctors are somewhat visible by default zoom.
+        }
+
+        if (doctorMarkers.length === 0) {
+             console.log("No doctors with valid coordinates to display on map.");
+        }
+    }
+
+
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Initial greeting from bot (if not handled by Flask on first load)
+    // appendMessage("Hello! I'm ArogyaBot, your AI health assistant. To get started, please tell me your name.", 'bot');
+</script>
+</body>
+</html>
