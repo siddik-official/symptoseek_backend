@@ -10,7 +10,7 @@ const symptomRoutes = require("./routes/symptoms");
 const alertRoutes = require("./routes/emergency-alert");
 const doctorRoutes = require("./routes/doctors");
 const appointmentRoutes = require("./routes/appointments");
-
+const chatRoutes = require("./routes/chat");
 
 
 dotenv.config();
@@ -49,6 +49,7 @@ app.use("/api/symptoms", symptomRoutes);
 app.use("/api/emergency-alert", alertRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/chat', chatRoutes); // Chat route
 
 
 const PORT = process.env.PORT || 5000;
