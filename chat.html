@@ -21,9 +21,9 @@
         .auth-container h2 { text-align: center; color: #333; margin-bottom: 20px; }
         .auth-container input[type="text"], .auth-container input[type="password"], .auth-container input[type="email"] { width: calc(100% - 22px); padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
         .auth-container button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; transition: background-color 0.2s; }
-        .auth-container button:hover { background-color: #55e9dc; }
+        .auth-container button:hover { background-color: #0056b3; } /* Darker hover */
         .auth-toggle { text-align: center; margin-top:15px; font-size: 0.9em; }
-        .auth-toggle button { background: none; border: none; color: #31ade7; cursor: pointer; text-decoration: underline; padding: 0; font-size: 1em; }
+        .auth-toggle button { background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; padding: 0; font-size: 1em; }
         #auth-error, #chat-error-msg { color: #dc3545; text-align: center; margin-bottom: 10px; font-size: 0.9em; min-height:1.2em; }
 
         /* Chat Styles */
@@ -44,7 +44,7 @@
         #map { height: 0px; width: calc(100% - 2px); /* -2px for border */ margin-top: 10px; transition: height 0.4s ease-in-out; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;}
         .doctor-card { border:1px solid #e0e0e0; padding:10px; margin-bottom:10px; border-radius:5px; overflow:hidden; font-size: 0.9em; background-color: #f9f9f9;}
         .doctor-card img { width:50px; height:50px; border-radius:50%; float:left; margin-right:10px; object-fit:cover; border: 1px solid #ddd;}
-        .doctor-card strong {color: #65ddab;}
+        .doctor-card strong {color: #007bff;} /* Changed color to match theme */
         .typing-indicator { font-style: italic; color: #6c757d; padding: 5px 15px; font-size: 0.9em; }
     </style>
 </head>
@@ -53,6 +53,8 @@
         <h2 id="auth-title">Login</h2>
         <div id="auth-error"></div>
         <input type="email" id="email-field" placeholder="Email" autocomplete="email">
+        <!-- Optional: Add a username field for registration if needed by backend -->
+        <!-- <input type="text" id="username-field" placeholder="Username (for registration)" style="display:none;"> -->
         <input type="password" id="password-field" placeholder="Password" autocomplete="current-password">
         <button id="auth-button">Login</button>
         <div class="auth-toggle">
@@ -95,6 +97,7 @@
         const authSection = document.getElementById('auth-section');
         const chatSectionWrapper = document.getElementById('chat-section-wrapper');
         const emailField = document.getElementById('email-field');
+        // const usernameField = document.getElementById('username-field'); // If you add a username input
         const passwordField = document.getElementById('password-field');
         const authButton = document.getElementById('auth-button');
         const authTitle = document.getElementById('auth-title');
@@ -106,8 +109,7 @@
         const chatErrorMsgDiv = document.getElementById('chat-error-msg');
 
         let isRegisterMode = false;
-        // Make sure this matches your Node.js server's port and base API path
-        const NODE_API_BASE_URL = 'http://localhost:5000/api'; 
+        const NODE_API_BASE_URL = 'http://localhost:5000/api'; // Ensure this is correct
 
         function displayAuthError(message) {
             authErrorDiv.textContent = message;
@@ -116,7 +118,7 @@
         function displayChatError(message) {
             chatErrorMsgDiv.textContent = message;
             chatErrorMsgDiv.style.display = message ? 'block' : 'none';
-            if (message) setTimeout(() => { chatErrorMsgDiv.style.display = 'none'; }, 7000);
+            if (message) setTimeout(() => { chatErrorMsgDiv.style.display = 'none'; chatErrorMsgDiv.textContent = ''; }, 7000);
         }
 
         toggleAuthModeButton.addEventListener('click', () => {
@@ -125,14 +127,17 @@
             authButton.textContent = isRegisterMode ? 'Register' : 'Login';
             toggleAuthText.textContent = isRegisterMode ? 'Already have an account? ' : "Don't have an account? ";
             toggleAuthModeButton.textContent = isRegisterMode ? 'Login' : 'Register';
+            // usernameField.style.display = isRegisterMode ? 'block' : 'none'; // Show/hide username field
             emailField.value = '';
             passwordField.value = '';
+            // usernameField.value = ''; // Clear username field too
             displayAuthError('');
         });
 
         authButton.addEventListener('click', async () => {
             const email = emailField.value.trim();
             const password = passwordField.value.trim();
+            // const username = usernameField.value.trim(); // If using a username field
             displayAuthError('');
 
             if (!email || !password) {
@@ -143,13 +148,24 @@
                 displayAuthError('Please enter a valid email address.');
                 return;
             }
+            // if (isRegisterMode && !username) { // If username is required for registration
+            //     displayAuthError('Username is required for registration.');
+            //     return;
+            // }
 
-            // *** Check this endpoint carefully ***
-            const endpoint = isRegisterMode ? `${NODE_API_BASE_URL}/auth/signup` : `${NODE_API_BASE_URL}/auth/login`; // Changed 'singup' to 'signup'
+
+            const endpoint = isRegisterMode ? `${NODE_API_BASE_URL}/auth/signup` : `${NODE_API_BASE_URL}/auth/login`;
             
             const payload = { email, password };
-            // If your backend registration needs a 'username' (even if it's the email), add it here:
-            // if (isRegisterMode) { payload.username = email; }
+            if (isRegisterMode) {
+                // --- IMPORTANT: Adjust this based on your backend requirements for signup ---
+                // Option 1: Backend derives username from email or doesn't need it explicitly from client for signup
+                // Option 2: If backend NEEDS a username field for signup.
+                // payload.username = username; // If you have a dedicated username input
+                payload.username = email.split('@')[0]; // Or derive from email, e.g., part before @
+                // payload.name = email.split('@')[0]; // Or 'name' if that's the field your User model expects
+                // --- END IMPORTANT ---
+            }
             
             authButton.disabled = true;
             authButton.textContent = isRegisterMode ? 'Registering...' : 'Logging in...';
@@ -172,17 +188,23 @@
                     toggleAuthModeButton.click(); 
                 } else { 
                     if (data.token || data.accessToken) {
-                        localStorage.setItem('accessToken', data.token || data.accessToken);
-                        localStorage.setItem('userDisplayIdentifier', data.user?.email || data.email || email); 
+                        const tokenToStore = data.token || data.accessToken;
+                        localStorage.setItem('accessToken', tokenToStore);
+
+                        const displayIdentifier = data.user?.username || data.user?.name || data.user?.email || data.username || data.name || data.email || email;
+                        localStorage.setItem('userDisplayIdentifier', displayIdentifier); 
+                        
                         showChatSection();
-                        addMessage("Welcome " + (data.user?.email || data.email || email) + "! I'm ArogyaBot. How can I help you today?", 'bot');
+                        // Send an initial "hi" to trigger the bot's personalized greeting
+                        userInputField.value = "hi"; 
+                        await sendMessageToServer(); // Wait for it to complete to avoid race conditions
                     } else {
                         displayAuthError('Login successful, but no token received from server.');
                     }
                 }
             } catch (error) {
                 console.error('Authentication error:', error);
-                displayAuthError('An error occurred during authentication. Please check console.');
+                displayAuthError('An error occurred. Please check console/network tab.');
             } finally {
                  authButton.disabled = false;
                  authButton.textContent = isRegisterMode ? 'Register' : 'Login';
@@ -201,6 +223,8 @@
             authSection.style.display = 'block';
             chatSectionWrapper.style.display = 'none';
             loggedInUserDisplay.textContent = '';
+            emailField.value = ''; // Clear fields on logout
+            passwordField.value = '';
         }
 
         function showChatSection() {
@@ -212,12 +236,15 @@
             }
         }
         
-        function checkLoginStatus() {
+        async function checkLoginStatus() { // Made async
             const token = localStorage.getItem('accessToken');
             const userIdentifier = localStorage.getItem('userDisplayIdentifier');
             if (token && userIdentifier) {
                 showChatSection();
-                addMessage(`Welcome back, ${userIdentifier}! How can I assist you today?`, 'bot');
+                if (chatMessages.children.length === 0) { // Only if chat is empty (fresh load)
+                    userInputField.value = "hi"; 
+                    await sendMessageToServer(); // Wait for it
+                }
             } else {
                 showAuthSection();
             }
@@ -238,12 +265,18 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        async function sendMessageToServer() {
+        async function sendMessageToServer() { // Made async for easier await
             const messageText = userInputField.value.trim();
-            if (!messageText) return;
+            if (!messageText && chatMessages.children.length > 0) { // Allow empty initial message if chat is empty (e.g. programmatic "hi")
+                 // but not if user types nothing after conversation started
+                if (userInputField === document.activeElement) return; // only if user submitted empty
+            }
 
-            addMessage(messageText, 'user');
-            userInputField.value = '';
+
+            if (messageText) addMessage(messageText, 'user'); // Only add user message if it's not empty
+            const originalMessageForServer = messageText || "hi"; // Send "hi" if input was empty (for initial greeting)
+            userInputField.value = ''; // Clear input after processing
+            
             displayChatError(''); 
             typingIndicator.style.display = 'block';
             sendButton.disabled = true;
@@ -258,14 +291,13 @@
             }
 
             try {
-                // Ensure this points to your Node.js chat endpoint
                 const response = await fetch(`${NODE_API_BASE_URL}/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ message: messageText })
+                    body: JSON.stringify({ message: originalMessageForServer })
                 });
 
                 typingIndicator.style.display = 'none';
@@ -276,7 +308,7 @@
                     let errMsg = `Error ${response.status}: ${errorData.message || 'Failed to get response from server.'}`;
                     if (errorData.flask_response && errorData.flask_response.bot_response_parts) {
                          errMsg += ` Details: ${errorData.flask_response.bot_response_parts.join(' ')}`;
-                    } else if (errorData.details && errorData.details.bot_response_parts) { // For older error structure
+                    } else if (errorData.details && errorData.details.bot_response_parts) { 
                          errMsg += ` Details: ${errorData.details.bot_response_parts.join(' ')}`;
                     }
                     addMessage(errMsg, 'bot');
@@ -290,7 +322,7 @@
                 }
 
                 const data = await response.json();
-                if (data.success && data.bot_response_parts) {
+                if (data.success === true && data.bot_response_parts) {
                     data.bot_response_parts.forEach(part => {
                         const isHtmlContent = /<\w+.*>/.test(part);
                         addMessage(part, 'bot', isHtmlContent);
@@ -300,11 +332,10 @@
                         console.log("Received map_data, calling displayMapWithDoctors:", data.map_data.doctors);
                         displayMapWithDoctors(data.map_data.doctors);
                     } else {
-                        console.log("No map_data or no doctors in map_data, calling hideMap.");
                         hideMap(); 
                     }
-                } else if (data.bot_response_parts) { // Handle if 'success' field is missing but parts are there
-                    console.warn("Response 'success' field missing, but bot_response_parts found.");
+                } else if (data.bot_response_parts) { 
+                    console.warn("Response 'success' field missing/false, but bot_response_parts found.");
                      data.bot_response_parts.forEach(part => {
                         const isHtmlContent = /<\w+.*>/.test(part);
                         addMessage(part, 'bot', isHtmlContent);
@@ -317,6 +348,7 @@
                 }
                 else {
                     addMessage(data.message || "Received an unexpected response structure from the server.", 'bot');
+                    displayChatError(data.message || "Unexpected response.");
                 }
 
             } catch (error) {
@@ -331,6 +363,7 @@
         sendButton.addEventListener('click', sendMessageToServer);
         userInputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendButton.disabled) {
+                e.preventDefault(); // Prevent form submission if it's in a form
                 sendMessageToServer();
             }
         });
@@ -358,7 +391,6 @@
             }
             
             mapElement.style.height = '300px'; 
-            console.log("Map container height set to 300px");
             initializeMap(); 
             
             if (!mapInstance) {
@@ -369,7 +401,6 @@
 
             doctorMarkers.forEach(marker => mapInstance.removeLayer(marker));
             doctorMarkers = [];
-            console.log("Cleared old doctor markers.");
 
             if (!doctors || doctors.length === 0) {
                  console.warn("No doctors data provided to displayMapWithDoctors.");
@@ -398,27 +429,26 @@
                 let popupContent = `<strong>${doc.name || 'N/A'}</strong><br>${doc.speciality || 'N/A'}`;
                 if (doc.hospital) popupContent += `<br>🏥 ${doc.hospital}`;
                 if (doc.address) popupContent += `<br>📍 ${doc.address}`;
-                if (doc.contact && String(doc.contact).toLowerCase() !== 'nan' && String(doc.contact).toLowerCase() !== 'n/a' && String(doc.contact).trim() !== '') {
-                    popupContent += `<br>📞 ${doc.contact}`;
+                
+                const contactStr = String(doc.contact).trim();
+                if (doc.contact && contactStr && contactStr.toLowerCase() !== 'nan' && contactStr.toLowerCase() !== 'n/a') {
+                    popupContent += `<br>📞 ${contactStr}`;
                 }
                 marker.bindPopup(popupContent);
                 doctorMarkers.push(marker);
                 bounds.extend([lat, lng]);
             });
-            console.log(`Added ${doctorMarkers.length} new doctor markers.`);
             
-            setTimeout(() => {
-                if (mapInstance) {
-                    console.log("Invalidating map size and fitting bounds...");
+            setTimeout(() => { // Give map a moment to render correctly after height change
+                if (mapInstance && mapElement.offsetHeight > 0) { // Check if map is visible
                     mapInstance.invalidateSize(); 
                     if (bounds.isValid()) {
-                        mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+                        mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
                     } else if (doctorMarkers.length === 1) { 
                         mapInstance.setView(doctorMarkers[0].getLatLng(), 13);
-                    } else {
+                    } else { // Fallback if no valid bounds (should not happen if validDoctors > 0)
                         mapInstance.setView([23.8103, 90.4125], 7); 
                     }
-                    console.log("Map size invalidated and bounds fitted.");
                 }
             }, 150); 
         }
@@ -426,12 +456,15 @@
         function hideMap() {
             if (mapElement) {
                 mapElement.style.height = '0px';
-                console.log("Map container hidden.");
+            }
+             if (mapInstance) { // Clear markers when hiding
+                doctorMarkers.forEach(marker => mapInstance.removeLayer(marker));
+                doctorMarkers = [];
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            checkLoginStatus();
+            checkLoginStatus(); // Made async, so await it if it was critical to finish before other DOMContentLoaded things
         });
 
     </script>
