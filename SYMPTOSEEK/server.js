@@ -1,8 +1,11 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+// const dotenv = require("dotenv");
 const cors = require("cors");
 const cloudinary = require("cloudinary").v2;
+
 
 // Routes
 const authRoutes = require("./routes/auth");
@@ -13,7 +16,7 @@ const appointmentRoutes = require("./routes/appointments");
 const chatRoutes = require("./routes/chat");
 
 
-dotenv.config();
+// dotenv.config();
 
 // In server.js
 // app.use(cors({
@@ -27,6 +30,10 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌");
+
 
 const app = express();
 

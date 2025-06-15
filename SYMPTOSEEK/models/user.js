@@ -17,6 +17,30 @@ const UserSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   role: { type: String, default: "user" },
   status: { type: String, default: "active" },
+
+  isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    otp: {
+        type: String,
+        required: false, // Not required for all users, only during verification
+        select: false,   // Will not be returned in queries by default
+    },
+    otpExpires: {
+        type: Date,
+        required: false,
+        select: false,   // Will not be returned in queries by default
+    },
+  passwordResetToken: { type: String, select: false },
+  passwordResetExpires: { type: Date, select: false },
+  emailVerificationToken: { type: String, select: false },
+  emailVerificationExpires: { type: Date, select: false },
+  emailVerified: { type: Boolean, default: false },
+  emailVerificationSentAt: { type: Date, select: false },
+  passwordChangedAt: { type: Date, select: false },
+  
+
   
   // Medical Information
   blood_group: { type: String, default: "" },

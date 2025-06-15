@@ -607,7 +607,7 @@ def chat_api():
                not session['current_clarifying_symptom_key'] and \
                is_simple_greeting_only:
                 
-                bot_responses.append(f"Hello {user_greeting_name_part}! I'm ArogyaBot. To help me understand your condition, please describe your main symptoms.")
+                bot_responses.append(f"Hello {user_greeting_name_part}! I'm SymptoSeek-Bot. To help me understand your condition, please describe your main symptoms.")
                 # Stay in AWAITING_INITIAL_SYMPTOMS, wait for next message
             else: # Process symptoms
                 if not NATURAL_SYMPTOM_PHRASES_FOR_FUZZY:
