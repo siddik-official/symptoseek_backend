@@ -8,6 +8,7 @@ const cloudinary = require("cloudinary").v2;
 
 
 // Routes
+const adminRoutes = require("./routes/admin");
 const authRoutes = require("./routes/auth");
 const symptomRoutes = require("./routes/symptoms");
 const alertRoutes = require("./routes/emergency-alert");
@@ -53,6 +54,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.log(err));
 
 // Routes
+app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/symptoms", symptomRoutes);
 app.use("/api/emergency-alert", alertRoutes);
@@ -124,5 +126,4 @@ process.on('uncaughtException', (error) => {
 // END OF CHANGES
 // =================================================================
 
-// Export the app for testing or other purposes
 module.exports = app;

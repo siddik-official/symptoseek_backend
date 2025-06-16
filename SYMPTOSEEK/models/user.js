@@ -4,6 +4,11 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ['user', 'admin'], // Ensures role can only be one of these
+    default: 'user'         // New users from signup are 'user' by default
+  },
   bio: { type: String, default: "" },
   gender: { type: String, default: "" },
   age: { type: Number, default: null },
@@ -17,6 +22,8 @@ const UserSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   role: { type: String, default: "user" },
   status: { type: String, default: "active" },
+
+  // Verification fields
 
   isVerified: {
         type: Boolean,

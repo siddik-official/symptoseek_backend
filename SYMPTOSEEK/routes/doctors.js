@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Doctor = require('../models/doctors');
+const adminMiddleware = require('../middleware/adminMiddleware'); // <-- IMPORT MIDDLEWARE
 
 // GET all doctors
 router.get('/', async (req, res) => {
@@ -36,7 +37,7 @@ router.get('/:id', getDoctor, (req, res) => {
 });
 
 // CREATE a new doctor
-router.post('/', async (req, res) => {
+router.post('/',adminMiddleware, async (req, res) => {
   const doctor = new Doctor({
     image_sourse: req.body.image_sourse,
     name: req.body.name,
@@ -58,7 +59,7 @@ router.post('/', async (req, res) => {
 });
 
 // UPDATE a doctor
-router.patch('/:id', getDoctor, async (req, res) => {
+router.patch('/:id',adminMiddleware, getDoctor, async (req, res) => {
   if (req.body.image_sourse != null) {
     res.doctor.image_sourse = req.body.image_sourse;
   }
@@ -85,7 +86,7 @@ router.patch('/:id', getDoctor, async (req, res) => {
 });
 
 // DELETE a doctor
-router.delete('/:id', getDoctor, async (req, res) => {
+router.delete('/:id',adminMiddleware, getDoctor, async (req, res) => {
   try {
     await res.doctor.remove();
     res.json({ message: 'Doctor deleted' });
