@@ -32,6 +32,8 @@ const UserSchema = new mongoose.Schema({
         required: false,
         select: false,   // Will not be returned in queries by default
     },
+
+  timezone: { type: String, default: 'Asia/Dhaka' },
   passwordResetToken: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },
   emailVerificationToken: { type: String, select: false },
