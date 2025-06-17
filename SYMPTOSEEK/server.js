@@ -16,6 +16,7 @@ const doctorRoutes = require("./routes/doctors");
 const appointmentRoutes = require("./routes/appointments");
 const chatRoutes = require("./routes/chat");
 const reminderRoutes = require("./routes/reminder"); 
+const reportsRoutes = require("./routes/reports"); 
 const { initializeSchedules } = require('./services/schedulerService'); 
 
 
@@ -62,6 +63,7 @@ app.use("/api/doctors", doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/chat', chatRoutes); // Chat route
 app.use('/api/reminder', reminderRoutes); // Reminders route
+app.use('/api/reports', reportsRoutes); // Reports route
 
 
 const PORT = process.env.PORT || 5000;
@@ -73,7 +75,7 @@ initializeSchedules()
   .then(() => console.log("Reminder schedules initialized successfully."))
   .catch(err => console.error("Error initializing reminder schedules:", err));
 
-// 2. Create a single, robust graceful shutdown function
+// Create a single, robust graceful shutdown function
 const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
 
