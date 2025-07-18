@@ -4,7 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import pickle
 import os
-import numpy as np # Added for np.max in example
+import numpy as np 
 
 # --- Configuration ---
 MODEL_DIR = 'models'  # Directory to save models
@@ -18,12 +18,12 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 print("Loading training and testing data...")
 try:
     train_df = pd.read_csv('Training.csv')
-    test_df = pd.read_csv('Testing.csv')
+    test_df = pd.read_csv('Testing2.csv')
     print("Data loaded successfully.")
 except FileNotFoundError:
     print("********************************************************************************")
     print("Error: Training.csv or Testing.csv not found in the current directory.")
-    print("Please ensure these files (from Kaushil268's dataset) are present.")
+    print("Please ensure these files  are present.")
     print("********************************************************************************")
     exit()
 
@@ -64,10 +64,8 @@ print(f"First few symptoms: {symptom_columns[:5]}")
 
 # --- Model Training ---
 print("\nTraining the disease prediction model (RandomForestClassifier)...")
-# You can experiment with different models and hyperparameters
-# RandomForest is a good starting point
-# class_weight='balanced' can help with imbalanced datasets (if some diseases are rare)
-model = RandomForestClassifier(n_estimators=150, random_state=42, class_weight='balanced', min_samples_split=5)
+
+model = RandomForestClassifier(n_estimators=150, random_state=50, class_weight='balanced', min_samples_split=5)
 try:
     model.fit(X_train, y_train)
     print("Model training complete.")

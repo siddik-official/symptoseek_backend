@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArogyaBot - Health Assistant</title>
+    <title>SymptoSeek - Health Assistant</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
@@ -24,7 +24,7 @@
             height: calc(100vh - 180px); /* Adjusted height */
             min-height: 400px;
         }
-        .chat-header { background-color: #007bff; color: white; padding: 15px; text-align: center; font-size: 1.2em; }
+        .chat-header { background-color: #b333da; color: white; padding: 15px; text-align: center; font-size: 1.2em; }
         .chat-box {
             flex-grow: 1;
             padding: 15px;
@@ -34,7 +34,7 @@
         .message { margin-bottom: 15px; padding: 10px; border-radius: 6px; line-height: 1.4; }
         .user-message { background-color: #e1f5fe; text-align: right; margin-left: auto; max-width: 70%; }
         .bot-message { background-color: #f0f0f0; text-align: left; margin-right: auto; max-width: 85%; }
-        .bot-message strong { color: #0056b3; }
+        .bot-message strong { color: #dc35eb; }
         .bot-message em { color: #555; font-style: italic; }
         .chat-input-area { display: flex; padding: 10px; border-top: 1px solid #ddd; background-color: #fff; }
         #userInput { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-right: 10px; }
@@ -90,10 +90,10 @@
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-header">ArogyaBot</div>
+        <div class="chat-header">SymptoSeek</div>
         <div class="chat-box" id="chatBox">
             <!-- Initial bot message -->
-            <div class="message bot-message">Hello! I'm ArogyaBot, your AI health assistant. To get started, please tell me your name.</div>
+            <div class="message bot-message">Hello! I'm SymptoSeekBot, your AI health assistant. To get started, please tell me your name.</div>
         </div>
         <div class="chat-input-area">
             <input type="text" id="userInput" placeholder="Type your message..." autofocus>

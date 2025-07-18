@@ -163,6 +163,176 @@ router.post("/resend-otp", async (req, res) => {
     }
 });
 
+// Forgot Password - Send reset token
+router.post("/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
+
+        // Find the user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(400).json({ message: "Please verify your email first before resetting password." });
+        }
+
+        // Generate a secure random token (6-digit code for simplicity)
+        const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Set token and expiry (15 minutes from now)
+        user.passwordResetToken = resetToken;
+        user.passwordResetExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+        await user.save();
+
+        // Send password reset email
+        await transporter.sendMail({
+            to: user.email,
+            subject: 'Password Reset Request',
+            html: `
+                <p>Hello ${user.name},</p>
+                <p>You requested to reset your password for your 
+                <a href="https://symptoseek.vercel.app" target="_blank">SymptoSeek</a> account.</p>
+                <p>Your password reset code is: <b>${resetToken}</b></p>
+                <p>This code is valid for 15 minutes only.</p>
+                <p>If you didn't request this, please ignore this email.</p>
+                <p>Best regards,<br>
+                <a href="https://symptoseek.vercel.app" target="_blank">SymptoSeek</a> Team</p>
+            `
+        });
+
+        res.status(200).json({ 
+            message: "Password reset code has been sent to your email." 
+        });
+
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Reset Password - Verify token and set new password
+router.post("/reset-password", async (req, res) => {
+    try {
+        const { email, resetToken, newPassword } = req.body;
+
+        if (!email || !resetToken || !newPassword) {
+            return res.status(400).json({ 
+                message: "Email, reset token, and new password are required." 
+            });
+        }
+
+        // Validate password strength
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                message: "Password must be at least 6 characters long." 
+            });
+        }
+
+        // Find user and explicitly select password reset fields
+        const user = await User.findOne({ email }).select('+passwordResetToken +passwordResetExpires');
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(400).json({ 
+                message: "Please verify your email first." 
+            });
+        }
+
+        // Check if reset token is valid and not expired
+        if (!user.passwordResetToken || 
+            user.passwordResetToken !== resetToken || 
+            Date.now() > user.passwordResetExpires) {
+            return res.status(400).json({ 
+                message: "Invalid or expired reset token." 
+            });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update user with new password and clear reset fields
+        user.password = hashedPassword;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        user.passwordChangedAt = new Date();
+
+        await user.save();
+
+        // Send confirmation email
+        await transporter.sendMail({
+            to: user.email,
+            subject: 'Password Reset Successful',
+            html: `
+                <p>Hello ${user.name},</p>
+                <p>Your password has been successfully reset for your 
+                <a href="https://symptoseek.vercel.app" target="_blank">SymptoSeek</a> account.</p>
+                <p>If you didn't make this change, please contact our support team immediately.</p>
+                <p>Best regards,<br>
+                <a href="https://symptoseek.vercel.app" target="_blank">SymptoSeek</a> Team</p>
+            `
+        });
+
+        res.status(200).json({ 
+            message: "Password has been reset successfully. You can now log in with your new password." 
+        });
+
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Verify Reset Token (optional - for frontend validation)
+router.post("/verify-reset-token", async (req, res) => {
+    try {
+        const { email, resetToken } = req.body;
+
+        if (!email || !resetToken) {
+            return res.status(400).json({ 
+                message: "Email and reset token are required." 
+            });
+        }
+
+        // Find user and check reset token
+        const user = await User.findOne({ email }).select('+passwordResetToken +passwordResetExpires');
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Check if reset token is valid and not expired
+        if (!user.passwordResetToken || 
+            user.passwordResetToken !== resetToken || 
+            Date.now() > user.passwordResetExpires) {
+            return res.status(400).json({ 
+                message: "Invalid or expired reset token." 
+            });
+        }
+
+        res.status(200).json({ 
+            message: "Reset token is valid.",
+            valid: true
+        });
+
+    } catch (error) {
+        console.error("Verify reset token error:", error);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
 
 // Login (Updated to check for verification)
 router.post("/login", async (req, res) => {

@@ -16,7 +16,6 @@ router.get('/time', (req, res) => {
   });
 
 
-
 router.post('/', authMiddleware, async (req, res) => {
     const { doctors_id, date, reason } = req.body;
     
