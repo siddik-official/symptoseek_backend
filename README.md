@@ -1,6 +1,99 @@
 # SymptomSeek - AI-Powered Medical Diagnosis Assistant
 
 SymptomSeek is an intelligent healthcare application that uses machine learning to analyze symptoms and provide disease predictions, along with doctor recommendations and appointment booking functionality.
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** (v16 or higher)
+- **Python** (v3.8 or higher)
+- **MongoDB** (v4.4 or higher)
+- **npm** or **yarn**
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/siddik-official/symptoseek_backend.git
+   cd symptoseek_backend/SYMPTOSEEK
+   ```
+
+2. **Install Node.js dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Install Python dependencies for ML services**
+   ```bash
+   cd disease_predictions
+   pip install -r requirements.txt
+   cd ..
+   
+   # For additional ML services
+   cd ml-services
+   pip install -r requirement.txt
+   cd ..
+   ```
+
+4. **Environment Setup**
+   Create a `.env` file in the SYMPTOSEEK root directory:
+   ```env
+   # Server Configuration
+   PORT=5000
+   NODE_ENV=development
+   
+   # Database
+   MONGO_URI=your_mongo_uri
+   
+   # Authentication
+   JWT_SECRET=your_super_secure_jwt_secret_here
+   
+   # Cloudinary Configuration (for file uploads)
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+   CLOUDINARY_API_KEY=your_cloudinary_api_key
+   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+   
+   # Email Service (for notifications and reminders)
+   EMAIL_USER=your_email@gmail.com
+   EMAIL_PASS=your_email_app_password
+   
+   # ML Service Configuration
+   FLASK_PORT=5001
+   ML_SERVICE_URL=http://localhost:5001
+   ```
+
+5. **Database Setup**
+   - Ensure MongoDB is running on your system
+   - The application will automatically create the required collections
+
+6. **Train the ML Model** (First time setup)
+   ```bash
+   cd disease_predictions
+   python model_training.py
+   ```
+
+7. **Start the Application**
+   
+   **Method 1: Manual Start**
+   ```bash
+   # Terminal 1: Start the main Express server
+   npm start
+   # or
+   node server.js
+   
+   # Terminal 2: Start the ML prediction service
+   cd disease_predictions
+   python app.py
+   
+   # Terminal 3: Start additional ML services (optional)
+   cd ml-services
+   python app.py
+   ```
+   
+   **Method 2: Using Docker (if configured)**
+   ```bash
+   docker-compose up
+   ```
 
 ## 🌟 Features
 
@@ -72,99 +165,6 @@ SYMPTOSEEK/
     └── tests/                   # ML service tests
 ```
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Node.js** (v16 or higher)
-- **Python** (v3.8 or higher)
-- **MongoDB** (v4.4 or higher)
-- **npm** or **yarn**
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/siddik-official/symptoseek_backend.git
-   cd symptoseek_backend/SYMPTOSEEK
-   ```
-
-2. **Install Node.js dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Install Python dependencies for ML services**
-   ```bash
-   cd disease_predictions
-   pip install -r requirements.txt
-   cd ..
-   
-   # For additional ML services
-   cd ml-services
-   pip install -r requirement.txt
-   cd ..
-   ```
-
-4. **Environment Setup**
-   Create a `.env` file in the SYMPTOSEEK root directory:
-   ```env
-   # Server Configuration
-   PORT=5000
-   NODE_ENV=development
-   
-   # Database
-   MONGO_URI=mongodb://localhost:27017/symptoseek
-   
-   # Authentication
-   JWT_SECRET=your_super_secure_jwt_secret_here
-   
-   # Cloudinary Configuration (for file uploads)
-   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-   CLOUDINARY_API_KEY=your_cloudinary_api_key
-   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-   
-   # Email Service (for notifications and reminders)
-   EMAIL_USER=your_email@gmail.com
-   EMAIL_PASS=your_email_app_password
-   
-   # ML Service Configuration
-   FLASK_PORT=5001
-   ML_SERVICE_URL=http://localhost:5001
-   ```
-
-5. **Database Setup**
-   - Ensure MongoDB is running on your system
-   - The application will automatically create the required collections
-
-6. **Train the ML Model** (First time setup)
-   ```bash
-   cd disease_predictions
-   python model_training.py
-   ```
-
-7. **Start the Application**
-   
-   **Method 1: Manual Start**
-   ```bash
-   # Terminal 1: Start the main Express server
-   npm start
-   # or
-   node server.js
-   
-   # Terminal 2: Start the ML prediction service
-   cd disease_predictions
-   python app.py
-   
-   # Terminal 3: Start additional ML services (optional)
-   cd ml-services
-   python app.py
-   ```
-   
-   **Method 2: Using Docker (if configured)**
-   ```bash
-   docker-compose up
-   ```
 
 ## 📡 API Endpoints
 
@@ -172,15 +172,10 @@ SYMPTOSEEK/
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
-- `POST /api/auth/verify-email` - Verify email with OTP
-- `POST /api/auth/resend-otp` - Resend verification OTP
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password` - Reset password with token
-- `POST /api/auth/verify-reset-token` - Verify password reset token
 
 ### User Management
 - `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile/edit` - Update user profile
+- `PUT /api/auth/profile` - Update user profile
 
 ### Appointments
 - `POST /api/appointments` - Book new appointment
@@ -430,6 +425,63 @@ For support, email official.siddik@gmail.com or create an issue in the GitHub re
   - Appointment booking
   - Doctor recommendations
   - Admin panel
+
+### 📅 Recent Updates - July 18, 2025
+
+#### 🆕 What I worked on today:
+
+1. **Enhanced Authentication System**
+   - ✅ Integrated forgot password functionality
+   - ✅ Added password reset with email verification
+   - ✅ Implemented secure token-based password reset (15-minute expiry)
+   - ✅ Added password strength validation
+   - ✅ Enhanced email templates for password reset notifications
+
+2. **Security Improvements**
+   - ✅ Added comprehensive `.gitignore` file to protect sensitive data
+   - ✅ Enhanced environment variable protection
+   - ✅ Implemented secure password reset tokens
+   - ✅ Added email verification for password reset requests
+
+3. **Documentation Updates**
+   - ✅ Created comprehensive README.md with full project documentation
+   - ✅ Added detailed API endpoint documentation
+   - ✅ Included installation and setup instructions
+   - ✅ Added environment configuration guide
+   - ✅ Documented ML model specifications and training process
+
+4. **New API Endpoints Added**
+   - ✅ `POST /api/auth/forgot-password` - Request password reset
+   - ✅ `POST /api/auth/reset-password` - Reset password with token
+   - ✅ `POST /api/auth/verify-reset-token` - Verify reset token validity
+   - ✅ `POST /api/auth/verify-email` - Email verification with OTP
+   - ✅ `POST /api/auth/resend-otp` - Resend verification OTP
+
+5. **Email Service Enhancement**
+   - ✅ Professional email templates for password reset
+   - ✅ Branded emails with SymptoSeek links
+   - ✅ Confirmation emails for successful password changes
+   - ✅ Improved email security and formatting
+
+6. **Code Quality & Organization**
+   - ✅ Organized authentication routes logically
+   - ✅ Added proper error handling for password reset flows
+   - ✅ Implemented input validation for all new endpoints
+   - ✅ Added comprehensive comments and documentation
+
+#### 🔧 Technical Improvements:
+- Enhanced user schema with password reset fields
+- Improved email service configuration
+- Added proper error handling and validation
+- Implemented secure token generation and verification
+- Added comprehensive logging for debugging
+
+#### 🎯 Next Steps:
+- Frontend integration for password reset UI
+- Additional security measures (rate limiting)
+- Enhanced email templates
+- Mobile responsiveness improvements
+- Advanced ML model optimization
 
 ---
 
