@@ -439,8 +439,10 @@
                 bounds.extend([lat, lng]);
             });
             
-            setTimeout(() => { // Give map a moment to render correctly after height change
-                if (mapInstance && mapElement.offsetHeight > 0) { // Check if map is visible
+            // Give map a moment to render correctly after height change
+            setTimeout(() => { 
+                // Check if map is visible
+                if (mapInstance && mapElement.offsetHeight > 0) { 
                     mapInstance.invalidateSize(); 
                     if (bounds.isValid()) {
                         mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
@@ -450,7 +452,7 @@
                         mapInstance.setView([23.8103, 90.4125], 7); 
                     }
                 }
-            }, 150); 
+            }, 450); // <-- FIXED: Changed from 150 to 450 to wait for the 400ms CSS transition to finish.
         }
 
         function hideMap() {
