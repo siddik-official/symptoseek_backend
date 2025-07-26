@@ -30,7 +30,10 @@ const adminMiddleware = async (req, res, next) => {
         }
 
         // 5. Attach user ID to request and proceed
-        req.user = { userId: decoded.userId }; // You can attach the whole user object if needed
+        req.user = { 
+            id: decoded.userId,
+            userId: decoded.userId 
+        }; // Consistent with authMiddleware
         next();
 
     } catch (err) {

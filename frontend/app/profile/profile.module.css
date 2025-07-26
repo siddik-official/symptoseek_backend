@@ -1,0 +1,427 @@
+.container {
+  min-height: 100vh;
+  background: #f9fafb;
+  display: flex;
+  position: relative;
+}
+
+.sidebar {
+  width: 280px;
+  background: white;
+  padding: 2rem;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  z-index: 50;
+  transition: transform 0.3s ease-in-out;
+}
+
+.mainLogo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: inherit;
+  transition: transform 0.3s ease;
+}
+
+.mainLogo:hover {
+  transform: scale(1.02);
+}
+
+.logoIcon {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.logoIcon svg {
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.mainLogo:hover .logoIcon svg {
+  transform: rotate(-12deg);
+  color: #7928ca;
+}
+
+.mainLogo span {
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #9333ea 0%, #7928ca 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  transition: all 0.3s ease;
+}
+
+.mainLogo:hover span {
+  background-position: right center;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  color: #4b5563;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+  border: none;
+  background: none;
+  font-size: inherit;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  background: #f3f4f6;
+  color: #9333ea;
+}
+
+.logoutButton {
+  color: #4b5563;
+  font-weight: 500;
+}
+.navItem.active {
+  background: #f3e8ff;
+  color: #9333ea;
+  font-weight: 500;
+}
+
+.bottomNav {
+  margin-top: auto;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.menuButton {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 60;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  display: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.menuButton:hover {
+  background: #9333ea;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(147, 51, 234, 0.2);
+}
+
+@media (max-width: 768px) {
+  .menuButton {
+    display: block;
+  }
+}
+.main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+  width: 100%;
+}
+
+.header {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profileImage {
+  width: 120px;
+  height: 120px;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 4px solid #f3e8ff;
+}
+
+.profileImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.name {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.metadata {
+  display: flex;
+  gap: 2rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .profileInfo {
+    text-align: center;
+  }
+
+  .metadata {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .name {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statItem {
+    padding: 0.75rem;
+  }
+
+  .historyItem {
+    padding: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}
+.card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.historyItem:hover {
+  background: #f3f4f6;
+}
+
+.historyIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  background: #f3e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+}
+
+.historyContent {
+  flex: 1;
+}
+
+.historyTitle {
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.historyMeta {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.healthStatus {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+}
+
+.statusIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f3e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+}
+
+.chart {
+  margin-top: 1rem;
+  height: 200px;
+  width: 100%;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.statItem {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.statIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  background: #f3e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+}
+
+.statContent {
+  flex: 1;
+}
+
+.statLabel {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.statValue {
+  font-weight: 600;
+  color: #111827;
+}
+
+.editButton {
+  background: #9333ea;
+  color: white;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editButton:hover {
+  background: #7928ca;
+}
+
+.viewMore {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #9333ea;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.viewMore:hover {
+  color: #7928ca;
+}

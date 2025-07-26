@@ -39,15 +39,17 @@ router.get('/:id', getDoctor, (req, res) => {
 // CREATE a new doctor
 router.post('/',adminMiddleware, async (req, res) => {
   const doctor = new Doctor({
-    image_sourse: req.body.image_sourse,
+    image_source: req.body.image_source,
     name: req.body.name,
-    specialty: req.body.specialty,
+    speciality: req.body.speciality,
     address: req.body.address,
     number: req.body.number,
-    visitng_hours: req.body.visitng_hours,
+    visiting_hours: req.body.visiting_hours,
     degree: req.body.degree,
     hospital_name: req.body.hospital_name,
-    about: req.body.about
+    About: req.body.About,
+    longitude: req.body.longitude,
+    latitude: req.body.latitude
   });
 
   try {
@@ -60,22 +62,24 @@ router.post('/',adminMiddleware, async (req, res) => {
 
 // UPDATE a doctor
 router.patch('/:id',adminMiddleware, getDoctor, async (req, res) => {
-  if (req.body.image_sourse != null) {
-    res.doctor.image_sourse = req.body.image_sourse;
+  if (req.body.image_source != null) {
+    res.doctor.image_source = req.body.image_source;
   }
   if (req.body.name != null) {
     res.doctor.name = req.body.name;
   }
-  if (req.body.specialty != null) {
-    res.doctor.specialty = req.body.specialty;
+  if (req.body.speciality != null) {
+    res.doctor.speciality = req.body.speciality;
   }
   // Add similar checks for all other fields
   if (req.body.address != null) res.doctor.address = req.body.address;
   if (req.body.number != null) res.doctor.number = req.body.number;
-  if (req.body.visitng_hours != null) res.doctor.visitng_hours = req.body.visitng_hours;
+  if (req.body.visiting_hours != null) res.doctor.visiting_hours = req.body.visiting_hours;
   if (req.body.degree != null) res.doctor.degree = req.body.degree;
   if (req.body.hospital_name != null) res.doctor.hospital_name = req.body.hospital_name;
-  if (req.body.about != null) res.doctor.about = req.body.about;
+  if (req.body.About != null) res.doctor.About = req.body.About;
+  if (req.body.longitude != null) res.doctor.longitude = req.body.longitude;
+  if (req.body.latitude != null) res.doctor.latitude = req.body.latitude;
 
   try {
     const updatedDoctor = await res.doctor.save();
@@ -88,7 +92,7 @@ router.patch('/:id',adminMiddleware, getDoctor, async (req, res) => {
 // DELETE a doctor
 router.delete('/:id',adminMiddleware, getDoctor, async (req, res) => {
   try {
-    await res.doctor.remove();
+    await res.doctor.deleteOne();
     res.json({ message: 'Doctor deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });

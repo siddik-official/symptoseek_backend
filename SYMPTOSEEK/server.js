@@ -15,8 +15,10 @@ const alertRoutes = require("./routes/emergency-alert");
 const doctorRoutes = require("./routes/doctors");
 const appointmentRoutes = require("./routes/appointments");
 const chatRoutes = require("./routes/chat");
+const chatHistoryRoutes = require("./routes/chatHistory");
 const reminderRoutes = require("./routes/reminder"); 
 const reportsRoutes = require("./routes/reports"); 
+const notificationRoutes = require("./routes/notifications"); 
 const { initializeSchedules } = require('./services/schedulerService'); 
 
 
@@ -62,8 +64,10 @@ app.use("/api/emergency-alert", alertRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/chat', chatRoutes); // Chat route
+app.use('/api/chat', chatHistoryRoutes); // Chat history routes
 app.use('/api/reminder', reminderRoutes); // Reminders route
 app.use('/api/reports', reportsRoutes); // Reports route
+app.use('/api/notifications', notificationRoutes); // Notifications route
 
 
 const PORT = process.env.PORT || 5000;

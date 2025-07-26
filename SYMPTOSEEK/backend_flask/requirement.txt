@@ -1,0 +1,9 @@
+Flask
+Flask-CORS
+pandas
+numpy
+scikit-learn
+joblib
+spacy
+requests
+dotenv

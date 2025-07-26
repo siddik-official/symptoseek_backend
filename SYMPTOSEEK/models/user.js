@@ -20,11 +20,9 @@ const UserSchema = new mongoose.Schema({
   city: { type: String, default: "" },
   profile_pic: { type: String, default: "" },
   date: { type: Date, default: Date.now },
-  role: { type: String, default: "user" },
   status: { type: String, default: "active" },
 
   // Verification fields
-
   isVerified: {
         type: Boolean,
         default: false,
@@ -49,8 +47,6 @@ const UserSchema = new mongoose.Schema({
   emailVerificationSentAt: { type: Date, select: false },
   passwordChangedAt: { type: Date, select: false },
   
-
-  
   // Medical Information
   blood_group: { type: String, default: "" },
   weight: { type: String, default: "" },
@@ -62,6 +58,15 @@ const UserSchema = new mongoose.Schema({
   family_medical_history: { type: String, default: "" },
   emergency_contact: { type: String, default: "" }
 });
+
+// Virtual field for isAdmin check
+UserSchema.virtual('isAdmin').get(function() {
+  return this.role === 'admin';
+});
+
+// Ensure virtual fields are serialized
+UserSchema.set('toJSON', { virtuals: true });
+UserSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model("User", UserSchema);
 

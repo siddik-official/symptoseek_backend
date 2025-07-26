@@ -186,9 +186,9 @@ router.post("/forgot-password", async (req, res) => {
         // Generate a secure random token (6-digit code for simplicity)
         const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Set token and expiry (15 minutes from now)
+        // Set token and expiry (1 minute from now)
         user.passwordResetToken = resetToken;
-        user.passwordResetExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+        user.passwordResetExpires = Date.now() + 1 * 60 * 1000; // 1 minute
 
         await user.save();
 
@@ -201,7 +201,7 @@ router.post("/forgot-password", async (req, res) => {
                 <p>You requested to reset your password for your 
                 <a href="https://symptoseek.vercel.app" target="_blank">SymptoSeek</a> account.</p>
                 <p>Your password reset code is: <b>${resetToken}</b></p>
-                <p>This code is valid for 15 minutes only.</p>
+                <p>This code is valid for 1 minute only.</p>
                 <p>If you didn't request this, please ignore this email.</p>
                 <p>Best regards,<br>
                 <a href="https://symptoseek.vercel.app" target="_blank">SymptoSeek</a> Team</p>
@@ -340,7 +340,7 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select('+password'); // Explicitly select password
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(400).json({ message: "Incorrect email address. Please try again." });
 
     // NEW: Check if the user's email is verified
     if (!user.isVerified) {
@@ -348,7 +348,7 @@ router.post("/login", async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ message: "Incorrect password. Please try again." });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
@@ -369,9 +369,14 @@ router.post("/login", async (req, res) => {
 // Get Profile
 router.get("/profile", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
+    const userId = req.user.id || req.user.userId; // Support both for backward compatibility
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.json(user);
   } catch (error) {
+    console.error("Profile fetch error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
@@ -435,6 +440,175 @@ router.put("/profile/edit", authMiddleware, async (req, res) => {
 
     res.json(updatedUser);
   } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Admin Login Route
+router.post("/admin/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please provide email and password" });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Check if user is an admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied. Admin privileges required." });
+    }
+
+    // Check if user is verified
+    if (!user.isVerified) {
+      return res.status(400).json({ message: "Please verify your email before logging in" });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Create and sign JWT token
+    const payload = {
+      userId: user._id,
+      role: user.role
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profile_pic: user.profile_pic
+      }
+    });
+
+  } catch (error) {
+    console.error("Admin login error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Create Admin User (for testing/setup only - remove in production)
+router.post("/admin/create", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Admin user already exists with this email" });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create admin user
+    const adminUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'admin',
+      isVerified: true // Admin doesn't need email verification
+    });
+
+    await adminUser.save();
+
+    res.json({ 
+      message: "Admin user created successfully",
+      admin: {
+        id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        role: adminUser.role
+      }
+    });
+
+  } catch (error) {
+    console.error("Create admin error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+// Change Password - For authenticated users
+router.put("/change-password", authMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters long." });
+    }
+
+    // Find the user
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect." });
+    }
+
+    // Check if new password is different from current password
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: "New password must be different from current password." });
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update the password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    // Send confirmation email
+    try {
+      await transporter.sendMail({
+        to: user.email,
+        subject: 'Password Changed Successfully',
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #9333ea;">Password Changed Successfully</h2>
+            <p>Hello ${user.name},</p>
+            <p>Your password has been successfully changed on ${new Date().toLocaleString()}.</p>
+            <p>If you did not make this change, please contact our support team immediately.</p>
+            <br>
+            <p>Best regards,<br>SymptoSeek Team</p>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error("Failed to send password change confirmation email:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.status(200).json({ 
+      message: "Password changed successfully. A confirmation email has been sent." 
+    });
+
+  } catch (error) {
+    console.error("Change password error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });

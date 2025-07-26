@@ -1,17 +1,17 @@
 const mongoose = require("mongoose");
 
 const doctorSchema = new mongoose.Schema({
-    image_sourse: { type: String, required: true },
+    image_source: { type: String, required: true },
     name: { type: String, required: true },
     speciality: { type: String, required: true },
     address: { type: String, required: true },
     number: { type: String, required: true },
-    visitng_hours: { type: String, required: true },
+    visiting_hours: { type: String, required: true },
     degree: { type: String, required: true },
     hospital_name: { type: String, required: true },
-    about: { type: String, required: true },
-    longitude: { type: String, required: true },
-    latitude: { type: String, required: true },
+    About: { type: String, required: true },
+    longitude: { type: String, required: false },
+    latitude: { type: String, required: false },
     
 });
 

@@ -19,8 +19,8 @@ const reminderSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ['Medication', 'Appointment', 'Activity', 'Other'],
-      default: 'Other',
+      enum: ['medication', 'appointment', 'exercise', 'other'],
+      default: 'other',
     },
     // Store time as "HH:MM" (e.g., "08:00", "21:30") for easy scheduling
     time: {
@@ -28,7 +28,32 @@ const reminderSchema = new mongoose.Schema(
       required: [true, 'Please specify a time'],
       match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'Please use 24-hour HH:MM format'],
     },
+    // Date for one-time reminders or start date for recurring
+    date: {
+      type: Date,
+    },
+    // Recurring pattern
+    recurring: {
+      type: String,
+      enum: ['none', 'daily', 'weekly', 'monthly'],
+      default: 'none',
+    },
+    // Days of week for weekly recurring (0-6, Sunday-Saturday)
+    daysOfWeek: {
+      type: [Number],
+      validate: {
+        validator: function(v) {
+          return v.every(day => day >= 0 && day <= 6);
+        },
+        message: 'Days of week must be between 0-6 (Sunday-Saturday)'
+      }
+    },
     isCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    // For tracking completion status
+    completed: {
       type: Boolean,
       default: false,
     },

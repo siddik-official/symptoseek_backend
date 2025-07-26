@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "node server.js",
+    "start-all": "./start-all-backends.sh",
+    "flask": "cd backend_flask && ./flask_env/bin/python app.py"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +30,7 @@
     "node-cron": "^4.1.0",
     "nodemailer": "^7.0.3",
     "path": "^0.12.7",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
   }
 }

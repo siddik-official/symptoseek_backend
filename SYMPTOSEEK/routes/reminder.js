@@ -22,19 +22,26 @@ router.get('/', authMiddleware, async (req, res) => {
 // @access  Private
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { title, description, type, time } = req.body;
+    const { title, description, type, time, date, recurring, daysOfWeek } = req.body;
 
     if (!title || !type || !time) {
       return res.status(400).json({ message: 'Title, type, and time are required' });
     }
 
-    const reminder = await Reminder.create({
+    const reminderData = {
       user: req.user.id,
       title,
       description,
       type,
       time,
-    });
+    };
+
+    // Add optional fields if provided
+    if (date) reminderData.date = date;
+    if (recurring) reminderData.recurring = recurring;
+    if (daysOfWeek && Array.isArray(daysOfWeek)) reminderData.daysOfWeek = daysOfWeek;
+
+    const reminder = await Reminder.create(reminderData);
 
     await scheduleReminder(reminder);
     res.status(201).json(reminder);
