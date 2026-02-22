@@ -255,6 +255,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+flask_env/
 
 # Spyder project settings
 .spyderproject
@@ -357,10 +358,16 @@ secrets.json
 uploads/
 static/uploads/
 
-# ML Model files (uncomment if you want to exclude large model files)
-# *.pkl
-# *.h5
-# *.joblib
+# ML Model files (large binary files - tracked via DVC or similar)
+*.pkl
+*.h5
+*.joblib
+*.model
+*.bin
+
+# User data / chat history (sensitive)
+chat_history.json
+data/chat_history.json
 
 # Docker
 .dockerignore
